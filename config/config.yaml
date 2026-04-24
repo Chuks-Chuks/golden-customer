@@ -1,0 +1,31 @@
+input:
+  crm_path: "data/input/crm_customers.csv"
+  transaction_path: "data/input/transaction_customers.csv"
+
+output:
+  golden_record_path: "data/output/golden_customers"
+  quality_report_path: "data/output/quality_reports"
+  match_report_path: "data/output/match_report"
+
+spark:
+  app_name: "GoldenCustomerRecord"
+  master: "local[*]"
+  shuffle_partitions: 8
+
+reconciliation:
+  match_keys:
+    - email
+    - phone
+  confidence_scoring:
+    email_match: 1.0
+    phone_match: 0.8
+    name_address_match: 0.6
+  confidence_threshold: 0.5
+
+data_quality:
+  email_pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+  phone_pattern: "^\\+[1-9]\\d{10,14}$"
+  required_not_null:
+    - first_name
+    - last_name
+    - email
