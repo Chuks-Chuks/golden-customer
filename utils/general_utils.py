@@ -1,4 +1,5 @@
 import os
+import yaml
 
 def ensure_directory_exists(directory: str) -> None:
     """
@@ -17,7 +18,6 @@ def read_yaml_config(config_path: str) -> dict:
     Returns:
         dict: The contents of the YAML file as a dictionary.
     """
-    import yaml
     with open(config_path, 'r') as file:
         config = yaml.safe_load(file)
     return config
