@@ -2,8 +2,7 @@ import logging
 import os
 from utils.general_utils import ensure_directory_exists as ede
 
-
-def logger_setup(config) -> logging.Logger:
+def get_logger(config) -> logging.Logger:
     """
     Set up logging configuration for the pipeline.
     Args:        config (dict): The configuration dictionary.
