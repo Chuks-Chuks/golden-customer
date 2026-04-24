@@ -29,3 +29,9 @@ data_quality:
     - first_name
     - last_name
     - email
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  log_file: "golden_customer_record.log"
+  log_dir: "logs/"
