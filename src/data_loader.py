@@ -83,6 +83,8 @@ class DataLoader:
     def load_crm_data(self) -> DataFrame:
         """
         This method loads CRM data from the specified path, normalizes email and phone columns, and removes duplicates.
+        Returns:
+            DataFrame: A Spark DataFrame containing the loaded and preprocessed CRM data.
         """
         logger.info(f"Loading CRM data from path: {self.crm_path}")
 
@@ -128,6 +130,9 @@ class DataLoader:
     def load_transaction_data(self) -> DataFrame:
         """
         This method loads transaction data from the specified path and normalizes date columns.
+
+        Returns:
+            DataFrame: A Spark DataFrame containing the loaded and preprocessed transaction data.
         """
         logger.info(f"Loading transaction data from path: {self.transaction_path}")
 
