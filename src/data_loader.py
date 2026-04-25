@@ -17,8 +17,8 @@ class DataLoader:
     def __init__(self, spark: SparkSession, config: dict):
         self.spark = spark
         self.config = config
-        self.crm_path = config["input"]["crm_path"]
-        self.transaction_path = config["input"]["transaction_path"]
+        self.crm_path = self.config["input"]["crm_path"]
+        self.transaction_path = self.config["input"]["transaction_path"]
 
     @staticmethod
     def _normalize_email(col_name: str = "email") -> Column:
@@ -197,13 +197,3 @@ class DataLoader:
         logger.info(f"Loaded {trx_df.count()} of Transaction records")
 
         return crm_df, trx_df
-
-# Testing the DataLoader class
-# if __name__ == "__main__":
-#     spark = create_spark_session()
-#     data_loader = DataLoader(spark, config)
-#     data = data_loader.load_data()
-#     crm_df, trx_df = data
-#     crm_df.show(20, truncate=10)
-#     trx_df.show(20, truncate=10)
-#     spark.stop()
