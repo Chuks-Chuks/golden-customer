@@ -3,7 +3,6 @@ from pyspark.sql.functions import col, to_date, coalesce, desc, when, lower, reg
 from pyspark.sql.types import StructType, StructField, StringType
 from pyspark.sql.window import Window
 from pyspark.sql.functions import row_number
-from utils.spark_utils import create_spark_session
 from utils.logging_utils import get_logger
 from utils.general_utils import read_yaml_config as ryc
 
