@@ -1,7 +1,6 @@
 from pyspark.sql import SparkSession, DataFrame, Column
 from pyspark.sql.functions import col, to_date, coalesce, desc, when, lower, regexp_replace, trim, lit, current_timestamp
 from pyspark.sql.types import StructType, StructField, StringType
-from typing import Tuple
 from pyspark.sql.window import Window
 from pyspark.sql.functions import row_number
 from utils.spark_utils import create_spark_session
@@ -170,7 +169,7 @@ class DataLoader:
         return transaction_df
     
 
-    def load_data(self) -> Tuple[DataFrame, DataFrame]:
+    def load_data(self) -> tuple[DataFrame, DataFrame]:
         """
         Load both CRM and transaction data, caching them for performance and returning them as DataFrames.
 
@@ -196,11 +195,11 @@ class DataLoader:
         return crm_df, trx_df
 
 # Testing the DataLoader class
-# if __name__ == "__main__":
-#     spark = create_spark_session()
-#     data_loader = DataLoader(spark, config)
-#     data = data_loader.load_data()
-#     crm_df, trx_df = data
-#     crm_df.show(20, truncate=10)
-#     trx_df.show(20, truncate=10)
-#     spark.stop()
+if __name__ == "__main__":
+    spark = create_spark_session()
+    data_loader = DataLoader(spark, config)
+    data = data_loader.load_data()
+    crm_df, trx_df = data
+    crm_df.show(20, truncate=10)
+    trx_df.show(20, truncate=10)
+    spark.stop()
