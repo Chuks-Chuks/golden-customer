@@ -18,6 +18,12 @@ def read_yaml_config(config_path: str) -> dict:
     Returns:
         dict: The contents of the YAML file as a dictionary.
     """
-    with open(config_path, 'r') as file:
+    # Ensure the configuration file exists when reading
+    
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    full_config_path = os.path.join(project_root, config_path)
+    if not os.path.exists(full_config_path):
+        raise FileNotFoundError(f"Configuration file not found: {full_config_path}")
+    with open(full_config_path, 'r') as file:
         config = yaml.safe_load(file)
     return config
