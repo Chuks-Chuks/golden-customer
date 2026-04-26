@@ -5,3 +5,8 @@ __pycache__/
 *.log
 
 logs/
+
+playground.py
+*.pyc
+*.json
+*.csv
