@@ -1,5 +1,3 @@
-from ast import pattern
-
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import col, when, count, min as spark_min, max as spark_max
 from utils.logging_utils import get_logger
