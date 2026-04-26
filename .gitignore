@@ -7,3 +7,6 @@ __pycache__/
 logs/
 
 playground.py
+*.pyc
+*.json
+*.csv

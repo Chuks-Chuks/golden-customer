@@ -155,7 +155,7 @@ class DataLoader:
         # Normalize dataframe columns and deduplicate
         transaction_df = transaction_df \
             .withColumn("transaction_id", trim(col("transaction_id"))) \
-            .withColumn("customer_email", self._normalize_email("customer_email")) \
+            .withColumn("email", self._normalize_email("customer_email")) \
             .withColumn("first_name", trim(col("first_name"))) \
             .withColumn("last_name", trim(col("last_name"))) \
             .withColumn("phone", self._normalize_phone("phone")) \

@@ -25,10 +25,13 @@ reconciliation:
 data_quality:
   email_pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
   phone_pattern: "^\\+[1-9]\\d{10,14}$"
-  required_not_null:
+  columns_to_check:
     - first_name
     - last_name
     - email
+    - phone
+    - city
+    - country
 
 logging:
   level: "INFO"
