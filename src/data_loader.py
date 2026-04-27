@@ -110,14 +110,14 @@ class DataLoader:
             .withColumn("customer_id", trim(col("customer_id"))) \
             .withColumn("first_name", trim(col("first_name"))) \
             .withColumn("last_name", trim(col("last_name"))) \
-            .withColumn("email", self._normalize_email("email")) \
-            .withColumn("phone", self._normalize_phone("phone")) \
+            .withColumn("normalized_email", self._normalize_email("email")) \
+            .withColumn("normalized_phone", self._normalize_phone("phone")) \
             .withColumn("address", trim(col("address"))) \
             .withColumn("city", trim(col("city"))) \
             .withColumn("country", trim(col("country"))) \
             .withColumn("registration_date", self._normalising_date_columns("registration_date")) \
             .withColumn("last_updated", self._normalising_date_columns("last_updated"))
-            
+
         # Remove duplicates
         crm_df = self._remove_duplicates(crm_df, "customer_id", "last_updated")
 
@@ -155,10 +155,10 @@ class DataLoader:
         # Normalize dataframe columns and deduplicate
         transaction_df = transaction_df \
             .withColumn("transaction_id", trim(col("transaction_id"))) \
-            .withColumn("email", self._normalize_email("customer_email")) \
+            .withColumn("normalized_email", self._normalize_email("customer_email")) \
             .withColumn("first_name", trim(col("first_name"))) \
             .withColumn("last_name", trim(col("last_name"))) \
-            .withColumn("phone", self._normalize_phone("phone")) \
+            .withColumn("normalized_phone", self._normalize_phone("phone")) \
             .withColumn("shipping_address", trim(col("shipping_address"))) \
             .withColumn("city", trim(col("city"))) \
             .withColumn("country", trim(col("country"))) \
