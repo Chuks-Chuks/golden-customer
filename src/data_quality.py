@@ -192,12 +192,14 @@ class DataQualityChecker:
         Save the data quality report as a JSON file in the data quality_reports directory.
         """
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        today_date = datetime.now().strftime("%d-%m-%y")
         output_dir = self.report_path
-        output_path = f"{output_dir}/{report['source']}_data_quality_report_{timestamp}.json"
+        date_dir = os.path.join(output_dir, today_date)
+        output_path = output_path = os.path.join(date_dir, f"{report['source']}_data_quality_report_{timestamp}.json")
         logger.info(f"Saving data quality report to {output_path}...")
         
         # Ensure the output directory exists
-        if not os.path.exists(output_dir):
+        if not os.path.exists(date_dir):
             os.makedirs(output_dir)
 
 
