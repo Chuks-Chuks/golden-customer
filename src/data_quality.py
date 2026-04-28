@@ -17,7 +17,6 @@ class DataQualityChecker:
         self.email_pattern = self.config['data_quality']['email_pattern']
         self.phone_pattern = self.config['data_quality']['phone_pattern'] 
         self.columns_to_check = self.config['data_quality']['columns_to_check']   
-        self.report_path = self.config['output']['quality_report_path']   
 
         
     def check_completeness(self, df: DataFrame, required_columns: list) -> dict[str, dict]:
@@ -187,18 +186,20 @@ class DataQualityChecker:
 
         return report
     
-    def save_report(self, report: dict) -> None:
+    def save_report(self, report: dict, path:str) -> None:
         """
         Save the data quality report as a JSON file in the data quality_reports directory.
         """
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_dir = self.report_path
-        output_path = f"{output_dir}/{report['source']}_data_quality_report_{timestamp}.json"
+        today_date = datetime.now().strftime("%d-%m-%y")
+        output_dir = path
+        date_dir = os.path.join(output_dir, today_date)
+        output_path = output_path = os.path.join(date_dir, f"{report['source']}_data_quality_report_{timestamp}.json")
         logger.info(f"Saving data quality report to {output_path}...")
         
         # Ensure the output directory exists
-        if not os.path.exists(output_dir):
-            os.makedirs(output_dir)
+        if not os.path.exists(date_dir):
+            os.makedirs(date_dir)
 
 
         with open(output_path, 'w') as f:

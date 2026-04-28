@@ -1,11 +1,8 @@
 import os
-from dotenv import load_dotenv
+import sys
 
-
-load_dotenv()
-
-pyspark_python = os.getenv("PYSPARK_DRIVER_PYTHON", "")
-pyspark_driver_python = os.getenv("PYSPARK_DRIVER_PYTHON", "")
+pyspark_python = sys.executable
+pyspark_driver_python = sys.executable
 
 
 if pyspark_python:
@@ -24,8 +21,10 @@ config = ryc(config_path)
 logger = get_logger(config)
 
 
-def create_spark_session(app_name: str = "GoldenCustomerRecord", 
-                        master: str = "local[*]") -> SparkSession:
+def create_spark_session(app_name: str, 
+                        master: str,
+                        partition: int
+                        ) -> SparkSession:
     """Create and configure a Spark session."""
 
     logger.info(f"Creating Spark session with app name '{app_name}' and master '{master}'")
@@ -34,7 +33,7 @@ def create_spark_session(app_name: str = "GoldenCustomerRecord",
             .master(master) \
             .config("spark.sql.adaptive.enabled", "true") \
             .config("spark.sql.adaptive.coalescePartitions.enabled", "true") \
-            .config("spark.sql.shuffle.partitions", "8") \
+            .config("spark.sql.shuffle.partitions", f"{partition}") \
             .config("spark.driver.memory", "4g") \
             .config("spark.sql.execution.arrow.pyspark.enabled", "true") \
             .config("spark.pyspark.python", pyspark_python) \
