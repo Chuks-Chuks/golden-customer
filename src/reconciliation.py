@@ -25,17 +25,17 @@ class CustomerReconciliation:
         """
         logger.info("Finding email matches between CRM and Transaction data...")
 
-        # Perform a left join on the email column
+        # Perform a inner join on the email column
         matched_df = crm_df.alias("crm").join(
             broadcast(trx_df.alias("trx")), 
-            col("crm.email") == col("trx.email"), 
+            col("crm.normalized_email") == col("trx.normalized_email"), 
             "inner"
         ) \
-            .filter(col("crm.email").isNotNull()) \
+            .filter(col("crm.normalized_email").isNotNull()) \
             .select(
             col("crm.customer_id").alias("crm_customer_id"),
             col("trx.transaction_id").alias("transaction_id"),
-            col("crm.email").alias("match_key"),
+            col("crm.normalized_email").alias("match_key"),
             lit("email").alias("match_type"),
             lit(self.confidence_scoring['email_match']).alias("confidence_score")
         )
@@ -49,17 +49,17 @@ class CustomerReconciliation:
         """
         logger.info("Finding phone matches between CRM and Transaction data...")
 
-        # Perform a left join on the phone column
+        # Perform an inner join on the phone column
         matched_df = crm_df.alias("crm").join(
             broadcast(trx_df.alias("trx")), 
-            col("crm.phone") == col("trx.phone"), 
+            col("crm.normalized_phone") == col("trx.normalized_phone"), 
             "inner"
         ) \
-            .filter(col("crm.phone").isNotNull()) \
+            .filter(col("crm.normalized_phone").isNotNull()) \
             .select(
             col("crm.customer_id").alias("crm_customer_id"),
             col("trx.transaction_id").alias("transaction_id"),
-            col("crm.phone").alias("match_key"),
+            col("crm.normalized_phone").alias("match_key"),
             lit("phone").alias("match_type"),
             lit(self.confidence_scoring['phone_match']).alias("confidence_score")
             )
@@ -133,10 +133,10 @@ class CustomerReconciliation:
         window_spec = Window.partitionBy("crm_customer_id") \
                     .orderBy(desc("confidence_score"), desc("match_priority"))
         
-        best_matches = all_matches.withColumn(
-            "rank", row_number().over(window_spec) \
-        ).filter(col("rank") == 1) \
-        .drop("rank", "match_priority"     
+        best_matches = (all_matches
+        .withColumn("rank", row_number().over(window_spec))
+        .filter(col("rank") == 1)
+        .drop("rank", "match_priority")
         )
         
         mappings = best_matches.select(
@@ -177,7 +177,8 @@ class CustomerReconciliation:
         unmatched_count = unmatched.count()
 
         # Log reconciliation summary
-        logger.info(f"Reconciliation completed. Total records below:")
+        logger.info(f"Reconciliation completed: {matched_count} records matched, {unmatched_count} unmatched.")
+
         stats = (
             final_reconciliation \
             .groupBy("match_type") \

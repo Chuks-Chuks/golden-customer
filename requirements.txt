@@ -2,3 +2,7 @@ pyspark==3.5.0
 pyyaml==6.0.1
 pytest==7.4.3
 chispa==0.10.1
+phonenumbers==8.12.50
+python-dotenv==1.0.0
+pandas
+pyarrow

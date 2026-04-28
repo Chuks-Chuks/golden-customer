@@ -1,3 +1,17 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+pyspark_python = os.getenv("PYSPARK_DRIVER_PYTHON", "")
+pyspark_driver_python = os.getenv("PYSPARK_DRIVER_PYTHON", "")
+
+
+if pyspark_python:
+    os.environ["PYSPARK_PYTHON"] = pyspark_python
+if pyspark_driver_python:
+    os.environ["PYSPARK_DRIVER_PYTHON"] = pyspark_driver_python
+
 from pyspark.sql import SparkSession
 from utils.logging_utils import get_logger
 from utils.general_utils import read_yaml_config as ryc
@@ -6,6 +20,7 @@ from utils.general_utils import read_yaml_config as ryc
 config_path = ("config/config.yaml")
 config = ryc(config_path)
 logger = get_logger(config)
+
 
 def create_spark_session(app_name: str = "GoldenCustomerRecord", 
                         master: str = "local[*]") -> SparkSession:
@@ -20,4 +35,6 @@ def create_spark_session(app_name: str = "GoldenCustomerRecord",
             .config("spark.sql.shuffle.partitions", "8") \
             .config("spark.driver.memory", "4g") \
             .config("spark.sql.execution.arrow.pyspark.enabled", "true") \
+            .config("spark.pyspark.python", pyspark_python) \
+            .config("spark.pyspark.driver.python", pyspark_driver_python) \
             .getOrCreate())
