@@ -61,8 +61,8 @@ class DataQualityChecker:
 
         metrics = {}
 
-        if "email" in df.columns:
-            email_col = col("email")
+        if "normalized_email" in df.columns:
+            email_col = col("normalized_email")
 
             agg_result = df.select(
                 count(when(email_col.rlike(self.email_pattern), 1)).alias("email_valid_count"),
@@ -84,10 +84,10 @@ class DataQualityChecker:
                 "validity_percentage": round(email_validity_percentage, 2)
             }
 
-        if "phone" in df.columns:
+        if "normalized_phone" in df.columns:
             logger.info(f"Checking format validity for phone column")
 
-            phone_col = col("phone")
+            phone_col = col("normalized_phone")
 
             agg_result = df.select(
                 count(when(phone_col.rlike(self.phone_pattern), 1)).alias("phone_valid_count"),

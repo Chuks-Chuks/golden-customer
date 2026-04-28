@@ -1,14 +1,78 @@
 from pyspark.sql import SparkSession, DataFrame, Column
-from pyspark.sql.functions import col, to_date, coalesce, desc, when, lower, regexp_replace, trim, lit, current_timestamp
+from pyspark.sql.functions import (col, to_date, coalesce, desc, when, lower, 
+                                   regexp_replace, trim, lit, 
+                                   current_timestamp, udf, pandas_udf)
 from pyspark.sql.types import StructType, StructField, StringType
 from pyspark.sql.window import Window
+
+import pandas as pd
+import re
 from pyspark.sql.functions import row_number
 from utils.logging_utils import get_logger
 from utils.general_utils import read_yaml_config as ryc
+import phonenumbers
+from phonenumbers import NumberParseException
+
 
 config_path = "config/config.yaml"
 config = ryc(config_path)
 logger = get_logger(config)
+country_to_region = {"France": "FR", "UK": "GB"}
+country_to_code = {
+    "FR": "33",
+    "GB": "44"
+}
+
+def _normalize_phone(phone_number: str, country: str) -> str | None:
+    if phone_number is None:
+        return None
+
+    try:
+        # Step 1: Clean using regex (remove everything except digits and '+')
+        cleaned = re.sub(r"[^\d+]", "", phone_number.strip())
+
+        if not cleaned:
+            return None
+
+        # Step 2: If already international format → trust but verify lightly
+        if cleaned.startswith("+"):
+            try:
+                parsed = phonenumbers.parse(cleaned, None)
+                if phonenumbers.is_possible_number(parsed):
+                    return phonenumbers.format_number(
+                        parsed, phonenumbers.PhoneNumberFormat.E164
+                    )
+                else:
+                    return cleaned  # fallback, don't discard
+            except NumberParseException:
+                return cleaned  # fallback
+
+        # Step 3: Handle local numbers using country context
+        region = country_to_region.get(country)
+        country_code = country_to_code.get(region) if region else None
+
+        if region and country_code:
+            try:
+                parsed = phonenumbers.parse(cleaned, region)
+                if phonenumbers.is_possible_number(parsed):
+                    return phonenumbers.format_number(
+                        parsed, phonenumbers.PhoneNumberFormat.E164
+                    )
+                else:
+                    # fallback: manually construct E.164-like format
+                    return f"+{country_code}{cleaned}"
+            except NumberParseException:
+                return f"+{country_code}{cleaned}"
+
+        # Step 4: Last fallback — return cleaned version
+        return cleaned
+
+    except Exception:
+        return None
+
+
+# Create Spark UDF
+normalize_phone_udf = udf(_normalize_phone, StringType())
 
 class DataLoader:
     """
@@ -31,24 +95,7 @@ class DataLoader:
             lower(regexp_replace(trim(col(col_name)), "\\s+", ""))
         ).otherwise(lit(None))
 
-
-    @staticmethod
-    def _normalize_phone(col_name: str = "phone") -> Column:
-        """Normalize phone numbers removing non-digit characters and ensuring a standard format."""
-
-        logger.info(f"Normalizing phone column '{col_name}'")
-        return when(
-            col(col_name).isNotNull(),
-            regexp_replace(
-                regexp_replace(
-                    trim(col(col_name)),
-                    "[()\\-\\s\\.]", ""
-                ),
-                "^(\\+?)(\\d{10,15})$", "+$2"
-            )
-        ).otherwise(lit(None))
-
-
+    
     @staticmethod
     def _normalising_date_columns(date_column: str):
         """Normalize date columns to a standard format (yyyy-MM-dd)."""
@@ -59,6 +106,7 @@ class DataLoader:
             to_date(col(date_column), "yyyyMMdd")
         )
     
+
     @staticmethod
     def _remove_duplicates(df: DataFrame, partition_column: str, order_column: str) -> DataFrame:
         """Remove duplicates based on specified column, keeping the most recent record."""
@@ -73,12 +121,14 @@ class DataLoader:
             .filter(col("row_num") == 1) \
             .drop("row_num")
 
+
     @staticmethod
     def _lineage_tracking(df: DataFrame, source: str) -> DataFrame:
         """Add audit columns for lineage tracking."""
         return df.withColumn("source", lit(source)) \
             .withColumn("ingestion_timestamp", current_timestamp())
     
+
     def load_crm_data(self) -> DataFrame:
         """
         This method loads CRM data from the specified path, normalizes email and phone columns, and removes duplicates.
@@ -111,7 +161,7 @@ class DataLoader:
             .withColumn("first_name", trim(col("first_name"))) \
             .withColumn("last_name", trim(col("last_name"))) \
             .withColumn("normalized_email", self._normalize_email("email")) \
-            .withColumn("normalized_phone", self._normalize_phone("phone")) \
+            .withColumn("normalized_phone", normalize_phone_udf(col("phone"), col("country"))) \
             .withColumn("address", trim(col("address"))) \
             .withColumn("city", trim(col("city"))) \
             .withColumn("country", trim(col("country"))) \
@@ -152,13 +202,14 @@ class DataLoader:
             .schema(transaction_schema) \
             .csv(self.transaction_path)
         
+
         # Normalize dataframe columns and deduplicate
         transaction_df = transaction_df \
             .withColumn("transaction_id", trim(col("transaction_id"))) \
             .withColumn("normalized_email", self._normalize_email("customer_email")) \
             .withColumn("first_name", trim(col("first_name"))) \
             .withColumn("last_name", trim(col("last_name"))) \
-            .withColumn("normalized_phone", self._normalize_phone("phone")) \
+            .withColumn("normalized_phone", normalize_phone_udf(col("phone"), col("country"))) \
             .withColumn("shipping_address", trim(col("shipping_address"))) \
             .withColumn("city", trim(col("city"))) \
             .withColumn("country", trim(col("country"))) \
@@ -188,7 +239,8 @@ class DataLoader:
         except Exception as e:
             logger.error(f"Error loading data: {e}")
             raise e
-    # Cache the DataFrames for performance
+        
+        # Cache the DataFrames for performance
         crm_df.cache()
         trx_df.cache()
 
