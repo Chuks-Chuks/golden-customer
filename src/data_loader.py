@@ -10,6 +10,7 @@ import re
 from pyspark.sql.functions import row_number
 from utils.logging_utils import get_logger
 from utils.general_utils import read_yaml_config as ryc
+from utils.spark_utils import lineage_tracking
 import phonenumbers
 from phonenumbers import NumberParseException
 
@@ -83,6 +84,7 @@ class DataLoader:
         self.config = config
         self.crm_path = self.config["input"]["crm_path"]
         self.transaction_path = self.config["input"]["transaction_path"]
+        self.lineage_tracking = lineage_tracking
 
     @staticmethod
     def _normalize_email(col_name: str = "email") -> Column:
@@ -121,13 +123,6 @@ class DataLoader:
             .filter(col("row_num") == 1) \
             .drop("row_num")
 
-
-    @staticmethod
-    def _lineage_tracking(df: DataFrame, source: str) -> DataFrame:
-        """Add audit columns for lineage tracking."""
-        return df.withColumn("source", lit(source)) \
-            .withColumn("ingestion_timestamp", current_timestamp())
-    
 
     def load_crm_data(self) -> DataFrame:
         """
@@ -172,7 +167,7 @@ class DataLoader:
         crm_df = self._remove_duplicates(crm_df, "customer_id", "last_updated")
 
         # Add lineage tracking columns for CRM data
-        crm_df = self._lineage_tracking(crm_df, "CRM")
+        crm_df = self.lineage_tracking(crm_df, "CRM")
 
         return crm_df
 
@@ -219,7 +214,7 @@ class DataLoader:
         transaction_df = self._remove_duplicates(transaction_df, "transaction_id", "purchase_date")
 
         # Add lineage tracking columns for transaction data
-        transaction_df = self._lineage_tracking(transaction_df, "TRX")
+        transaction_df = self.lineage_tracking(transaction_df, "TRX")
 
         return transaction_df
     

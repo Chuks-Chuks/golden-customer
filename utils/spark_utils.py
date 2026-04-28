@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 
+
 load_dotenv()
 
 pyspark_python = os.getenv("PYSPARK_DRIVER_PYTHON", "")
@@ -12,7 +13,8 @@ if pyspark_python:
 if pyspark_driver_python:
     os.environ["PYSPARK_DRIVER_PYTHON"] = pyspark_driver_python
 
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql.functions import current_timestamp, lit
 from utils.logging_utils import get_logger
 from utils.general_utils import read_yaml_config as ryc
 
@@ -38,3 +40,9 @@ def create_spark_session(app_name: str = "GoldenCustomerRecord",
             .config("spark.pyspark.python", pyspark_python) \
             .config("spark.pyspark.driver.python", pyspark_driver_python) \
             .getOrCreate())
+
+
+def lineage_tracking(df: DataFrame, source: str) -> DataFrame:
+    """Add audit columns for lineage tracking."""
+    return df.withColumn("source", lit(source)) \
+        .withColumn("ingestion_timestamp", current_timestamp())
