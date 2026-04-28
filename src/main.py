@@ -69,10 +69,39 @@ def run_pipeline():
         golden_report = data_quality_checker.generate_report(golden_record, source_name="GOLDEN")
         data_quality_checker.save_report(golden_report, path=config['output']['quality_report_path'])
 
+        logger.info("Creating the business layer gold subset")
+        ba_gold_df = golden_record.select(
+                        "gold_customer_id",
+                        "first_name",
+                        "last_name",
+                        "email",
+                        "phone",
+                        "address",
+                        "city",
+                        "country",
+                        "registration_date",
+                        "first_purchase_date",
+                        "last_purchase_date",
+                        "total_transactions",
+                        "customer_tenure_days",
+                        "customer_tenure_months",
+                        "is_active",
+                        "data_quality_score"
+                    )
+        # Saving the golden records as a parquet file
+        try:
+            logger.info("Writing the golden_record ")
+            golden_record.write.mode("overwrite").parquet(path=f"{config['output']['golden_record_path']}/gold_raw")
+            ba_gold_df.write.mode("overwrite").parquet(path=f"{config['output']['golden_record_path']}/ba_gold")
+        except KeyError as e:
+            logger.info("The path doesn't exist: {e}")
+            raise
+
         # Saving the golden record as a parquet file
         try:
             logger.info("Writing the golden_record ")
-            golden_record.write.mode("overwrite").parquet(path=config['output']['golden_record_path'])
+            golden_record.write.mode("overwrite").parquet(path=f"{config['output']['golden_record_path']}/gold_raw")
+            ba_gold_df.write.mode("overwrite").parquet(path=f"{config['output']['golden_record_path']}/ba_gold")
         except KeyError as e:
             logger.info("The path doesn't exist: {e}")
             raise
