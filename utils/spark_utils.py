@@ -1,11 +1,8 @@
 import os
-from dotenv import load_dotenv
+import sys
 
-
-load_dotenv()
-
-pyspark_python = os.getenv("PYSPARK_DRIVER_PYTHON", "")
-pyspark_driver_python = os.getenv("PYSPARK_DRIVER_PYTHON", "")
+pyspark_python = sys.executable
+pyspark_driver_python = sys.executable
 
 
 if pyspark_python:
