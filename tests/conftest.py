@@ -5,11 +5,13 @@ from pyspark.sql.types import (
     StructType, StructField, StringType,
     DoubleType
 )
-from pyspark.sql.functions import (lower, regexp_replace, trim, when, col, lit)
+from pyspark.sql.functions import (lower, regexp_replace, trim, when, col, lit, coalesce)
 import shutil
 from pathlib import Path
 import csv
 from src.data_quality import DataQualityChecker
+from src.reconciliation import CustomerReconciliation
+from src.golden_record import GoldenRecordBuilder
 
 
 # PYSPARK SESSION FIXTURES
@@ -146,7 +148,7 @@ def mapping_schema():
 # CRM SAMPLE DATA
 
 @pytest.fixture
-def sample_crm_data(spark):
+def sample_crm_data(spark, crm_schema):
     """
     Create sample CRM data covering key scenarios:
     - Complete records with all fields
@@ -188,7 +190,7 @@ def sample_crm_data(spark):
 # TRANSACTION SAMPLE DATA
 
 @pytest.fixture
-def sample_txn_data(spark):
+def sample_txn_data(spark, transaction_schema):
     """
     Create sample transaction data covering:
     - Transactions matching CRM customers by email
@@ -225,6 +227,77 @@ def sample_txn_data(spark):
     ]
     
     return spark.createDataFrame(data, schema=transaction_schema)
+
+@pytest.fixture
+def create_crm_df(spark):
+    """
+    Factory fixture to create CRM DataFrames with required columns.
+    
+    Usage:
+        crm = create_crm_df(
+            customer_id="CRM001",
+            normalized_email="john@email.com"
+        )
+    """
+    from pyspark.sql.types import StructType, StructField, StringType
+    
+    schema = StructType([
+        StructField("customer_id", StringType(), True),
+        StructField("normalized_email", StringType(), True),
+        StructField("normalized_phone", StringType(), True),
+        StructField("first_name", StringType(), True),
+        StructField("last_name", StringType(), True),
+        StructField("city", StringType(), True),
+        StructField("country", StringType(), True),
+    ])
+    
+    def _create(**kwargs):
+        # Build a tuple in the correct order (must match schema order)
+        row = (
+            kwargs.get("customer_id"),
+            kwargs.get("normalized_email"),
+            kwargs.get("normalized_phone"),
+            kwargs.get("first_name"),
+            kwargs.get("last_name"),
+            kwargs.get("city"),
+            kwargs.get("country"),
+        )
+        return spark.createDataFrame([row], schema)
+    
+    return _create
+
+
+@pytest.fixture
+def create_txn_df(spark):
+    """
+    Factory fixture to create Transaction DataFrames with required columns.
+    """
+    from pyspark.sql.types import StructType, StructField, StringType
+    
+    schema = StructType([
+        StructField("transaction_id", StringType(), True),
+        StructField("normalized_email", StringType(), True),
+        StructField("normalized_phone", StringType(), True),
+        StructField("first_name", StringType(), True),
+        StructField("last_name", StringType(), True),
+        StructField("city", StringType(), True),
+        StructField("country", StringType(), True),
+    ])
+    
+    def _create(**kwargs):
+        # Build a tuple in the correct order (must match schema order)
+        row = (
+            kwargs.get("transaction_id"),
+            kwargs.get("normalized_email"),
+            kwargs.get("normalized_phone"),
+            kwargs.get("first_name"),
+            kwargs.get("last_name"),
+            kwargs.get("city"),
+            kwargs.get("country"),
+        )
+        return spark.createDataFrame([row], schema)
+    
+    return _create
 
 
 # RECONCILIATION MAPPING DATA
@@ -287,12 +360,76 @@ def parse_date_expr():
 
     return _expr
 
+@pytest.fixture
+def match_quality_expr():
+    """
+    Reusable match quality categorization expression.
+    
+    Returns a Column expression that categorizes confidence scores:
+    - high: confidence >= 0.8
+    - medium: confidence >= 0.5
+    - low: confidence < 0.5
+    """
+    from pyspark.sql.functions import when, col
+    
+    def _expr(confidence_col: str = "confidence"):
+        return when(col(confidence_col) >= 0.8, "high") \
+                .when(col(confidence_col) >= 0.5, "medium") \
+                .otherwise("low")
+    
+    return _expr
+
+@pytest.fixture
+def coalesce_crm_preferred():
+    """
+    Returns a Column expression that prefers CRM values over transaction values.
+    
+    Usage:
+        df.withColumn("final_name", coalesce_crm_preferred("crm_name", "txn_name"))
+    """
+    
+    def _expr(crm_col: str, txn_col: str):
+        return coalesce(col(crm_col), col(txn_col))
+    
+    return _expr
+
+
+@pytest.fixture
+def coalesce_transaction_preferred():
+    """
+    Returns a Column expression that prefers transaction values over CRM values.
+    
+    Use this for fields where transaction data is considered more reliable/current
+    (e.g., address, phone).
+    
+    Usage:
+        df.withColumn("final_address", coalesce_transaction_preferred("crm_addr", "txn_addr"))
+    """
+    
+    def _expr(crm_col: str, txn_col: str):
+        return coalesce(col(txn_col), col(crm_col))
+    
+    return _expr
+
+
+
+
 # INSTANCE HELPERS
 
 @pytest.fixture
 def dq_checker(spark, test_config):
     """Reusable DataQualityChecker instance."""
     return DataQualityChecker(spark, test_config)
+
+
+@pytest.fixture
+def cr_checker(spark, test_config):
+    return CustomerReconciliation(spark, test_config)
+
+@pytest.fixture
+def gb_checker(spark, test_config):
+    return GoldenRecordBuilder(spark, test_config)
+
 
 # UTILITY HELPERS
 

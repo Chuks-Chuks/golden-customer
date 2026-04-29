@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import (col, when, count as spark_count, concat_ws, 
                                    desc, broadcast, lit, row_number, round as spark_round)
 from pyspark.sql.window import Window
-from pyspark.sql.types import DoubleType
+from pyspark.sql.types import DoubleType, StructType, StructField, StringType, DoubleType, LongType
 from utils.logging_utils import get_logger
 from utils.general_utils import read_yaml_config as ryc
 
@@ -178,15 +178,22 @@ class CustomerReconciliation:
 
         # Log reconciliation summary
         logger.info(f"Reconciliation completed: {matched_count} records matched, {unmatched_count} unmatched.")
-
-        stats = (
-            final_reconciliation \
-            .groupBy("match_type") \
-            .agg(spark_count("*").alias("count")) \
-            .withColumn("percentage", spark_round(col("count") / total_count * 100, 2))
-        )
-
-        logger.info(f"Reconciliation completed: {total_count} records matched.")
-        logger.info(f"Match rate: {matched_count / total_count * 100:.2f}%")
+        if total_count > 0:
+            stats = (
+                final_reconciliation \
+                .groupBy("match_type") \
+                .agg(spark_count("*").alias("count")) \
+                .withColumn("percentage", spark_round(col("count") / total_count * 100, 2))
+            )
+            logger.info(f"Reconciliation completed: {total_count} records matched.")
+            logger.info(f"Match rate: {matched_count / total_count * 100:.2f}%")
+        else:
+            stats_schema = StructType([
+                StructField("match_type", StringType(), True),
+                StructField("count", LongType(), True),
+                StructField("percentage", DoubleType(), True),
+            ])
+            stats = self.spark.createDataFrame([], stats_schema)
+            logger.info("Reconciliation completed: No records to process.")
 
         return final_reconciliation, stats

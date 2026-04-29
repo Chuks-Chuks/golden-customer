@@ -1,6 +1,6 @@
-import pytest
 from datetime import date
 from pyspark.sql.functions import col
+from pyspark.sql.types import StringType, StructField, StructType
 from tests.conftest import create_temp_csv
 from src.data_loader import DataLoader, _normalize_phone
 
@@ -24,13 +24,8 @@ class TestEmailNormalization:
     
     def test_null_email(self, spark, normalize_email_expr):
         """Null emails should remain null."""
-        
-        df = spark.createDataFrame([(None,)], ["email"])
-        
-        result = df.withColumn(
-            "normalized", normalize_email_expr("email")
-        )
-        
+        df = spark.createDataFrame([(None,)], "email string")
+        result = df.withColumn("normalized", normalize_email_expr("email"))
         assert result.first()["normalized"] is None
     
     def test_email_with_internal_spaces(self, spark, normalize_email_expr):
@@ -91,7 +86,6 @@ class TestPhoneNormalization:
         """Phone with parentheses, dashes, spaces should be cleaned."""
         result = _normalize_phone("+44 (791) 112-3456", "UK")
         assert result is not None
-        # Should not contain formatting chars
         assert "(" not in str(result)
         assert ")" not in str(result)
         assert " " not in str(result)
