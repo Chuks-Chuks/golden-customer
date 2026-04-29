@@ -1,11 +1,8 @@
 from pyspark.sql import SparkSession, DataFrame, Column
 from pyspark.sql.functions import (col, to_date, coalesce, desc, when, lower, 
-                                   regexp_replace, trim, lit, 
-                                   current_timestamp, udf, pandas_udf)
+                                   regexp_replace, trim, lit, udf)
 from pyspark.sql.types import StructType, StructField, StringType
 from pyspark.sql.window import Window
-
-import pandas as pd
 import re
 from pyspark.sql.functions import row_number
 from utils.logging_utils import get_logger
@@ -24,7 +21,7 @@ country_to_code = {
     "GB": "44"
 }
 
-def _normalize_phone(phone_number: str, country: str) -> str | None:
+def _normalize_phone(phone_number: str | None, country: str) -> str | None:
     if phone_number is None:
         return None
 

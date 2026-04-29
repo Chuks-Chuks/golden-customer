@@ -28,8 +28,8 @@ data_quality:
   columns_to_check:
     - first_name
     - last_name
-    - email
-    - phone
+    - normalized_email
+    - normalized_phone
     - city
     - country
 
