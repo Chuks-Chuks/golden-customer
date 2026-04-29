@@ -1,4 +1,3 @@
-# golden-customer-record/src/main.py (CLEANED VERSION)
 from src.data_loader import DataLoader
 from src.data_quality import DataQualityChecker
 from src.reconciliation import CustomerReconciliation

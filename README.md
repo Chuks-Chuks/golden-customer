@@ -63,6 +63,8 @@ A multi-stage pipeline that:
 ---
 
 ## Architecture
+
+```text
 ┌─────────────────┐     ┌─────────────────┐
 │   CRM System    │     │  Transaction    │
 │ (crm_customers  │     │ (transaction_   │
@@ -128,7 +130,7 @@ A multi-stage pipeline that:
 │ │  quality_reports/ (JSON Reports)           │ │
 │ └────────────────────────────────────────────┘ │
 └────────────────────────────────────────────────┘
-
+```
 
 ---
 
@@ -199,7 +201,7 @@ Date range analysis (`min` to `max`) for time-based columns.
 ### Quality Report Output
 
 Reports are saved as timestamped JSON files:
-
+```text
 ┌── data/
 │   └── output/
 │       └── quality_reports/
@@ -207,7 +209,7 @@ Reports are saved as timestamped JSON files:
 │               ├── CRM_data_quality_report_20260429_120000.json
 │               ├── TRX_data_quality_report_20260429_120000.json
 │               └── GOLDEN_data_quality_report_20260429_120001.json
-
+```
 ---
 
 ## Reconciliation Strategy
@@ -264,51 +266,57 @@ This ensures no customer data is lost, even if they've never made a purchase.
 
 ## Project Structure
 
+```text
 golden-customer-record/
 │
-├── README.md                         # This file
-├── requirements.txt                  # Python dependencies
-├── .gitignore                        # Git exclusion rules
+├── README.md                              # Pipeline documentation
+├── requirements.txt                       # Python dependencies
+├── pyproject.toml                         # pytest & coverage configuration
+├── .gitignore                             # Git exclusion rules
+│
+├── .github/
+│   └── workflows/
+│       ├── ci.yml                         # Test & coverage pipeline
+│       └── lint.yml                       # Code quality checks
 │
 ├── config/
-│   └── config.yaml                   # Pipeline configuration
+│   └── config.yaml                        # Pipeline configuration
 │
 ├── src/
-│   ├── __init__.py                   # Package marker
-│   ├── main.py                       # Pipeline entry point & orchestration
-│   ├── data_loader.py                # CSV ingestion, cleaning, normalization
-│   ├── data_quality.py               # Quality assessment & reporting
-│   ├── reconciliation.py             # Multi-strategy customer matching
-│   └── golden_record.py              # Golden record assembly & enrichment
+│   ├── __init__.py                        # Package marker
+│   ├── main.py                            # Pipeline entry point & orchestration
+│   ├── data_loader.py                     # CSV ingestion, cleaning, normalization
+│   ├── data_quality.py                    # Quality assessment & reporting
+│   ├── reconciliation.py                  # Multi-strategy customer matching
+│   └── golden_record.py                   # Golden record assembly & enrichment
 │
 ├── utils/
-│   ├── __init__.py                   # Package marker
-│   ├── general_utils.py              # YAML config loader, directory helpers
-│   ├── logging_utils.py              # Structured logging configuration
-│   └── spark_utils.py                # Spark session factory, lineage tracking
+│   ├── __init__.py                        # Package marker
+│   ├── general_utils.py                   # YAML config loader, directory helpers
+│   ├── logging_utils.py                   # Structured logging configuration
+│   └── spark_utils.py                     # Spark session factory, lineage tracking
 │
 ├── tests/
-│   ├── __init__.py                   # Test package marker
-│   ├── conftest.py                   # Shared fixtures, schemas, sample data
-│   ├── test_data_loader.py           # DataLoader unit tests (21 tests)
-│   ├── test_data_quality.py          # DataQualityChecker unit tests (13 tests)
-│   ├── test_reconciliation.py        # Reconciliation unit tests (14 tests)
-│   └── test_golden_record.py         # GoldenRecordBuilder unit tests (13 tests)
+│   ├── __init__.py                        # Test package marker
+│   ├── conftest.py                        # Shared fixtures, schemas, sample data
+│   ├── test_data_loader.py                # DataLoader unit tests (16 tests)
+│   ├── test_data_quality.py               # DataQualityChecker unit tests (12 tests)
+│   ├── test_reconciliation.py             # Reconciliation unit tests (14 tests)
+│   └── test_golden_record.py              # GoldenRecordBuilder unit tests (12 tests)
 │
 ├── data/
-│   ├── input/                        # Place source CSV files here
+│   ├── input/                             # Place source CSV files here
 │   │   ├── crm_customers.csv
 │   │   └── transaction_customers.csv
-│   └── output/                       # Pipeline outputs
+│   └── output/                            # Pipeline outputs
 │       ├── golden_customers/
-│       │   ├── gold_raw/             # Full golden record (all columns)
-│       │   └── ba_gold/              # Business analytics subset
-│       └── quality_reports/          # JSON quality reports
+│       │   ├── gold_raw/                  # Full golden record (all columns)
+│       │   └── ba_gold/                   # Business analytics subset
+│       └── quality_reports/               # JSON quality reports
 │
 └── logs/
-    └── pipeline.log                  # Pipeline execution logs
-
----
+    └── pipeline.log                       # Pipeline execution logs
+```
 
 ## Setup & Installation
 
@@ -612,7 +620,7 @@ phonenumbers==8.13.29   # Phone number parsing & validation
 
 <div align="center">
 
-**Submitted by:** Philip Igbeka
+**Submitted by:** Philip Igbeka<br>
 **Date:** 29th April 2026
 
 </div>
