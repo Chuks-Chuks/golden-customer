@@ -1,6 +1,5 @@
 from datetime import date
 from pyspark.sql.functions import col
-from pyspark.sql.types import StringType, StructField, StructType
 from tests.conftest import create_temp_csv
 from src.data_loader import DataLoader, _normalize_phone
 

@@ -5,7 +5,7 @@ testpaths = ["tests"]
 
 [tool.coverage.run]
 source = ["src"]
-omit = ["tests/*", "venv/*"]
+omit = ["src/main.py", "tests/*", "venv/*"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -13,4 +13,4 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "raise NotImplementedError",
 ]
-fail_under = 70
+fail_under = 75

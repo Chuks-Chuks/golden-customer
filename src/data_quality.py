@@ -56,7 +56,7 @@ class DataQualityChecker:
         """
         Check for format validity in the email and phone columns by counting values that match a regex pattern.
         """
-        logger.info(f"Checking format validity for email column")
+        logger.info("Checking format validity for email column")
 
         metrics = {}
 
@@ -84,7 +84,7 @@ class DataQualityChecker:
             }
 
         if "normalized_phone" in df.columns:
-            logger.info(f"Checking format validity for phone column")
+            logger.info("Checking format validity for phone column")
 
             phone_col = col("normalized_phone")
 

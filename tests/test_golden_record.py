@@ -1,4 +1,3 @@
-from datetime import date
 from pyspark.sql.functions import col, when, datediff, current_date
 from datetime import datetime, timedelta
 
@@ -181,4 +180,4 @@ class TestComputedFields:
             ).otherwise(False)
         )
         
-        assert result.first()["is_active"] == True
+        assert result.first()["is_active"] is True

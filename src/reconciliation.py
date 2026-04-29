@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import (col, when, count as spark_count, concat_ws, 
                                    desc, broadcast, lit, row_number, round as spark_round)
 from pyspark.sql.window import Window
-from pyspark.sql.types import DoubleType, StructType, StructField, StringType, DoubleType, LongType
+from pyspark.sql.types import DoubleType, StructType, StructField, StringType, LongType
 from utils.logging_utils import get_logger
 from utils.general_utils import read_yaml_config as ryc
 
